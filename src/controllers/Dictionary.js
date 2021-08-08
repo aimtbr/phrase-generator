@@ -6,20 +6,28 @@ import {
   WORD_POS_ADJECTIVE,
   WORD_POS_NOUN,
   WORD_POS,
+  DICTIONARY_LANGUAGE_EN,
 } from '../lib/constants.js';
 import {
   getRandomItem,
 } from '../lib/helpers.js';
 
 
-const defaultDictionaryPath = config.get('dictionaryPath');
+const DICTIONARY_DEFAULT_PATH = config.get(`dictionary.${DICTIONARY_LANGUAGE_EN}`);
 
 export class Dictionary {
-  empty = true;
   adjectives = [];
   nouns = [];
+  #empty = true;
+  #path;
 
-  constructor(content) {
+  constructor(params) {
+    const {
+      content,
+      path,
+      language,
+    } = params;
+
     const {
       adjectives,
       nouns,
@@ -27,43 +35,61 @@ export class Dictionary {
 
     this.adjectives = adjectives;
     this.nouns = nouns;
+    this.#path = path;
+    this.language = language;
 
     if (this.adjectives.length > 0 || this.nouns.length > 0) {
-      this.empty = false;
+      this.#empty = false;
     }
   }
 
-  static async init(dictionary) {
-    if (dictionary === undefined) {
-      dictionary = await Dictionary.initFrom();
-    }
-
-    const [adjectives, nouns] = await Promise.all([
-      (async () => dictionary.adjectives.map(Word.init))(),
-      (async () => dictionary.nouns.map(Word.init))(),
-    ]);
-
-    const content = {
-      adjectives,
-      nouns,
+  static async init(options) {
+    const defaultOptions = {
+      path: DICTIONARY_DEFAULT_PATH,
     };
 
-    const instance = new Dictionary(content);
+    if (!options) {
+      options = defaultOptions;
+    }
 
-    return instance;
-  }
+    let {
+      dictionary,
+      path,
+    } = options;
 
-  static async initFrom(dictionaryPath = defaultDictionaryPath) {
-    // supports JSON dictionary import
-    const dictionary = await import(dictionaryPath);
+    if (path && !dictionary) {
+      // supports JSON dictionary import
+      const dictionaryString = await fsPromises.readFile(path, 'utf8');
 
-    const instance = Dictionary.init(dictionary);
+      dictionary = JSON.parse(dictionaryString);
+    }
+
+    const {
+      content,
+      language,
+    } = dictionary;
+
+    const [adjectives, nouns] = await Promise.all([
+      (async () => content.adjectives.map(Word.init))(),
+      (async () => content.nouns.map(Word.init))(),
+    ]);
+
+    const params = {
+      content: {
+        adjectives,
+        nouns,
+      },
+      path,
+      language,
+    };
+
+    const instance = new Dictionary(params);
 
     return instance;
   }
 
   async getRandomWord(partOfSpeech) {
-    if (this.empty) {
+    if (this.#empty) {
       throw new Error('Initialize a dictionary before querying a word from it (Dictionary.init or Dictionary.initFrom)');
     }
 
@@ -83,47 +109,18 @@ export class Dictionary {
     return randomWord;
   }
 
-  async getRareWords(partOfSpeech) {
-    const wordList = this.#getWordList(partOfSpeech);
-
-    const firstWord = wordList[0];
-
-    const rareWords = wordList.reduce((accumulator, word) => {
-      const accumulatorItem = accumulator[0];
-
-      if (word.usesCounter < accumulatorItem.usesCounter) {
-        return [word];
-      } else if (word.usesCounter === accumulatorItem.usesCounter) {
-        return [...accumulator, word];
-      }
-
-      return accumulator;
-    }, [firstWord]);
-
-    return rareWords;
-  }
-
-  // get a random word from the most rarely used ones
-  async getRareWord(partOfSpeech) {
-    const rareWords = await this.getRareWords(partOfSpeech);
-
-    const randomRareWord = getRandomItem(rareWords);
-
-    return randomRareWord;
-  }
-
   async getWord(partOfSpeech, categories) {
     const wordList = this.#getWordList(partOfSpeech);
 
-    const wordsMatched = await Promise.any(wordList.map(async (word) => {
+    const wordMatched = await Promise.any(wordList.map(async (word) => {
       if (word.hasAnyOfCategories(categories)) {
         return word;
       }
 
-      throw new Error('Word does not match any of categories');
-    })); // TODO: HANDLE ERROR, RAISING WHEN THERE IS NO MATCHING CATEGORY
+      return null;
+    }));
 
-    return wordsMatched;
+    return wordMatched;
   }
 
   async getWords(partOfSpeech, categories) {
@@ -144,8 +141,11 @@ export class Dictionary {
 
   toJSON() {
     const dictionary = {
-      adjectives: this.adjectives,
-      nouns: this.nouns,
+      language: this.language,
+      content: {
+        adjectives: this.adjectives,
+        nouns: this.nouns,
+      },
     };
 
     return dictionary;
@@ -154,7 +154,7 @@ export class Dictionary {
   async save() {
     const dictionarySerialized = JSON.stringify(this, null, '  ');
 
-    return fsPromises.writeFile(defaultDictionaryPath, dictionarySerialized);
+    return fsPromises.writeFile(this.#path, dictionarySerialized);
   }
 
   #getWordList(partOfSpeech) {
@@ -174,4 +174,33 @@ export class Dictionary {
       }
     }
   }
+
+  // async getRareWords(partOfSpeech) {
+  //   const wordList = this.#getWordList(partOfSpeech);
+
+  //   const firstWord = wordList[0];
+
+  //   const rareWords = wordList.reduce((accumulator, word) => {
+  //     const accumulatorItem = accumulator[0];
+
+  //     if (word.usesCounter < accumulatorItem.usesCounter) {
+  //       return [word];
+  //     } else if (word.usesCounter === accumulatorItem.usesCounter) {
+  //       return [...accumulator, word];
+  //     }
+
+  //     return accumulator;
+  //   }, [firstWord]);
+
+  //   return rareWords;
+  // }
+
+  // get a random word from the most rarely used ones
+  // async getRareWord(partOfSpeech) {
+  //   const rareWords = await this.getRareWords(partOfSpeech);
+
+  //   const randomRareWord = getRandomItem(rareWords);
+
+  //   return randomRareWord;
+  // }
 }

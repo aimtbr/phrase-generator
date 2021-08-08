@@ -2,5 +2,8 @@ import { join } from 'path';
 
 
 module.exports = {
-  dictionaryPath: join(__dirname, 'dictionary.json'),
+  dictionary: {
+    en: join(__dirname, 'dictionaries', 'dictionary-EN.json'),
+    ru: join(__dirname, 'dictionaries', 'dictionary-RU.json'),
+  }
 };

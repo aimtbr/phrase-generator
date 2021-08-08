@@ -1,0 +1,79 @@
+{
+  "language": "ru",
+  "content": {
+    "adjectives": [
+      {
+        "id": "8f66b6a5-1172-4d98-b30e-11a200e312ec",
+        "value": "пушистый",
+        "partOfSpeech": "adjective",
+        "categories": [
+          "toy",
+          "animal",
+          "insect",
+          "cloth",
+          "cover"
+        ],
+        "usesCounter": 14
+      },
+      {
+        "id": "a8f5f153-89d1-4404-9614-920bb7c98955",
+        "value": "маленький",
+        "partOfSpeech": "adjective",
+        "categories": [
+          "toy",
+          "animal",
+          "insect"
+        ],
+        "usesCounter": 14
+      },
+      {
+        "id": "1bfa682b-b3d2-46a3-ae31-8a456d5356c8",
+        "value": "милый",
+        "partOfSpeech": "adjective",
+        "categories": [
+          "animal",
+          "human"
+        ],
+        "usesCounter": 13
+      }
+    ],
+    "nouns": [
+      {
+        "id": "9dd46678-8322-4580-aed1-e7e7ec4a54d6",
+        "value": "котёнок",
+        "partOfSpeech": "noun",
+        "categories": [
+          "animal"
+        ],
+        "usesCounter": 20
+      },
+      {
+        "id": "f4a6058f-59ff-4b70-8ac6-8e31bbd3d307",
+        "value": "муравей",
+        "partOfSpeech": "noun",
+        "categories": [
+          "insect"
+        ],
+        "usesCounter": 7
+      },
+      {
+        "id": "11d0d24b-c8b0-4317-9b7d-6cee4b37b9c7",
+        "value": "волосы",
+        "partOfSpeech": "noun",
+        "categories": [
+          "cover"
+        ],
+        "usesCounter": 4
+      },
+      {
+        "id": "f04d35dc-06ea-4185-88c7-651be32b5c24",
+        "value": "ребёнок",
+        "partOfSpeech": "noun",
+        "categories": [
+          "human"
+        ],
+        "usesCounter": 6
+      }
+    ]
+  }
+}
